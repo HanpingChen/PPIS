@@ -9,6 +9,7 @@ from Bio.PDB.Polypeptide import PPBuilder
 from Bio.PDB.DSSP import dssp_dict_from_pdb_file
 from Bio.PDB.DSSP import residue_max_acc
 from SiteResidue import SiteResidue
+import os
 
 
 class ResidueSelect(Select):
@@ -45,6 +46,8 @@ def process_complex(structure):
     """
     io = PDBIO()
     io.set_structure(structure)
+    if not os.path.exists("clean_data"):
+        os.makedirs("clean_data")
     io.save("clean_data/"+structure.get_id()+".ent", ResidueSelect())
 
 
@@ -75,6 +78,8 @@ def calculate_site(structure)->dict:
     io = PDBIO()
     for chain in model:
         io.set_structure(structure)
+        if not os.path.exists("chain"):
+            os.makedirs("chain")
         io.save("chain/"+structure.get_id()+"_"+chain.get_id()+".ent", ChainSelect(chain.get_id()))
     # 提取出所有多肽链的序列，写成dictionary
     poly_seq_dict = generate_poly_seq(structure)
