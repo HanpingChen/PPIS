@@ -10,6 +10,7 @@ from Bio.PDB.DSSP import dssp_dict_from_pdb_file
 from Bio.PDB.DSSP import residue_max_acc
 from SiteResidue import SiteResidue
 import os
+from Bio.Data.SCOPData import protein_letters_3to1
 
 
 class ResidueSelect(Select):
@@ -66,6 +67,24 @@ def generate_poly_seq(structure)->dict:
     return poly_seq_dict
 
 
+def generate_index_in_seq(structure)->dict:
+    """
+    获取残基在链上的index对应在多肽序列上的的index
+    :param structure:
+    :return: {A:{1:10}} 表示在A链序列上，第一个残基在A链上的位置是10
+    """
+    model = structure[0]
+    dict = {}
+    for chain in model:
+        chain_dict = {}
+        i = 0
+        for r in chain:
+            chain_dict[r.get_id()[1]] = i
+            i = i + 1
+        dict[chain.get_id()] = chain_dict
+    return dict
+
+
 def calculate_site(structure)->dict:
     """
     计算一个复合物中的结合位点
@@ -90,6 +109,7 @@ def calculate_site(structure)->dict:
     # 计算复合物
     complex_file_name = "clean_data/"+structure.get_id()+".ent"
     complex_dssp_dict = dssp_dict_from_pdb_file(complex_file_name, DSSP="./mkdssp")[0]
+    # print(complex_dssp_dict)
     # 计算所有的链的dssp
     for chain in model:
         # 记录每一个链中的位点
@@ -117,24 +137,30 @@ def calculate_site(structure)->dict:
                     site_residue.acc = acc
                     site_residue.chain_id = chain.get_id()
                     site_residue.chain_index = residue_index
-                    site_residue.seq = poly_seq_dict[chain.get_id()][residue_index-1]
+                    # site_residue.seq = poly_seq_dict[chain.get_id()][residue_index-1]
+                    site_residue.seq = protein_letters_3to1.get(residue.get_resname())
                     site_list.append(site_residue)
         site_dict[chain.get_id()] = site_list
     return site_dict
 
 
 def start():
-    structure_id = "1aby"
-    filename = "data/1aby.pdb"
+    structure_id = "1lky"
+    filename = "data/"+structure_id+".ent"
     p = PDBParser()
     structure = p.get_structure(structure_id, filename)
     # 处理蛋复合物
     process_complex(structure)
-    clean_file_name = "clean_data/1aby.ent"
+    clean_file_name = "clean_data/"+structure_id+".ent"
     structure = p.get_structure(structure_id, clean_file_name)
     dict = calculate_site(structure)
+    count = 0
     for item in dict.items():
-        print(item[1][0], len(item[1]))
+        site_list = item[1]
+        count = count + len(site_list)
+        for site in site_list:
+            print(site)
+    print("共找到", count, "个位点")
 
 
 if __name__ == '__main__':
