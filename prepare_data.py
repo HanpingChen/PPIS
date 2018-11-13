@@ -155,16 +155,23 @@ def calculate_site(structure)->dict:
         json_data[chain.get_id()] = chain_site_dict_list
         site_dict[chain.get_id()] = site_list
     # 写入到json文件
-    with open(structure.get_id()+".json","w") as f:
+    with open("json/"+structure.get_id()+".json","w") as f:
         json.dump(json_data,f)
         print("写入完成")
     print(json_data)
+    # 删除中间文件
+    # 删除chain
+    for chain in model:
+        os.remove("chain/"+structure.get_id()+"_"+chain.get_id()+".ent")
     return site_dict
 
 
-def start():
-    structure_id = "1lky"
-    filename = "data/"+structure_id+".ent"
+def start(structure_id, filename):
+    # structure_id = "1lky"
+    # filename = "data/"+structure_id+".ent"
+    # 判断是否已经解析过
+    if os.path.exists("json/"+structure_id+".json"):
+        return
     p = PDBParser()
     structure = p.get_structure(structure_id, filename)
     # 处理蛋复合物
@@ -180,6 +187,8 @@ def start():
         # for site in site_list:
         #     print(site)
     print("共找到", count, "个位点")
+    # 删除clean_data
+    os.remove(clean_file_name)
     #print(json_data)
     #for chain in model:
 
@@ -187,6 +196,25 @@ def start():
 if __name__ == '__main__':
     import time
     s = time.time()
-    start()
+    base_path = "/Users/chenhanping/Downloads/pdb/"
+    file_list = os.listdir(base_path)
+    count = 0
+    for file in file_list:
+        file_path = os.path.join(base_path, file)
+        if os.path.isfile(file_path):
+            (filename, extention) = os.path.splitext(file)
+            count = count + 1
+            if filename.startswith("pdb"):
+                structure_id = filename[3:]
+                print(structure_id, filename)
+                #start()
+            else:
+                structure_id = filename
+            try:
+                start(structure_id, file_path)
+            except Exception as e:
+                print(filename, str(e))
+                continue
+            print(count, "/", len(file_list))
     e = time.time()
     print("耗时", e - s)
