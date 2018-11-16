@@ -1,5 +1,5 @@
 # author：chenhanping
-# date 2018/11/1 下午12:26
+# date 2018/11/non 下午12:26
 # copyright ustc sse
 
 from Bio.PDB import PDBParser
@@ -63,8 +63,10 @@ def generate_poly_seq(structure)->dict:
     poly_seq_dict = {}
     model = structure[0]
     for chain in model:
+        seq = ""
         for pp in ppb.build_peptides(chain):
-            poly_seq_dict[chain.get_id()] = pp.get_sequence().tostring()
+            seq += str(pp.get_sequence())
+        poly_seq_dict[chain.get_id()] =seq
     return poly_seq_dict
 
 
@@ -72,7 +74,7 @@ def generate_index_in_seq(structure)->dict:
     """
     获取残基在链上的index对应在多肽序列上的的index
     :param structure:
-    :return: {A:{1:10}} 表示在A链序列上，第一个残基在A链上的位置是10
+    :return: {A:{non:10}} 表示在A链序列上，第一个残基在A链上的位置是10
     """
     model = structure[0]
     dict = {}
@@ -80,8 +82,9 @@ def generate_index_in_seq(structure)->dict:
         chain_dict = {}
         i = 0
         for r in chain:
-            chain_dict[r.get_id()[1]] = i
-            i = i + 1
+            if r.get_id()[0] == ' ':
+                chain_dict[r.get_id()[1]] = i
+                i = i + 1
         dict[chain.get_id()] = chain_dict
     return dict
 
@@ -123,7 +126,7 @@ def calculate_site(structure)->dict:
         chain_file_name = "chain/"+structure.get_id()+"_"+chain.get_id()+".ent"
         chain_dict = dssp_dict_from_pdb_file(chain_file_name, DSSP="./mkdssp")[0]
         # dict的形式如
-        # ('A', (' ', 1, ' ')): ('M', '-', 108, 360.0, -92.4, 1, 0, 0.0, 2, -0.4, 0, 0.0, 127, -0.1)
+        # ('A', (' ', non, ' ')): ('M', '-', 108, 360.site, -92.4, non, site, site.site, 2, -site.4, site, site.site, 127, -site.non)
         # step2 ,遍历chain，判断残基是否占最大可达面积的16%
         for item in chain_dict.items():
             residue_site_dict = {}
@@ -135,7 +138,7 @@ def calculate_site(structure)->dict:
             max_acc = max_acc_dict[residue.get_resname()]
             if acc / max_acc > 0.16:
                 # step3, 比较当前的acc和在复合物中的acc的差值是否大于1
-                # 获取复合物中的当前残基的acc, item[0]是复合物中dict的key，也就是residue的唯一标识
+                # 获取复合物中的当前残基的acc, item[site]是复合物中dict的key，也就是residue的唯一标识
                 # 获取到的dict形式与上述的dict形式一致，所以结果元组的第三位就是acc
                 complex_acc = complex_dssp_dict[item[0]][2]
                 if acc - complex_acc > 1:
@@ -144,7 +147,7 @@ def calculate_site(structure)->dict:
                     site_residue.acc = acc
                     site_residue.chain_id = chain.get_id()
                     site_residue.chain_index = residue_index
-                    # site_residue.seq = poly_seq_dict[chain.get_id()][residue_index-1]
+                    # site_residue.seq = poly_seq_dict[chain.get_id()][residue_index-non]
                     site_residue.seq = protein_letters_3to1.get(residue.get_resname())
                     site_residue.seq_index = index_dict[chain.get_id()][residue_index]
                     site_list.append(site_residue)
