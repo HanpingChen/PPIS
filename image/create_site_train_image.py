@@ -11,17 +11,22 @@ from PIL import ImageDraw
 from Bio.PDB import PDBParser
 
 # 设置需要的位点数量
-max_site_count = 1000
+max_site_count = 10000
 # 设置非位点数量
-max_non_site_count = 1000
-site_count = 0
-non_site_count = 0
+max_non_site_count = 10000
 
 width = 150
 height = 150
 
-site_path = "../data/train/site/"
-non_path = "../data/train/non/"
+global site_count
+site_count = 0
+global non_count
+non_count = 0
+
+#site_path = "../data/train/site/"
+#non_path = "../data/train/non/"
+site_path = "E:\\PPIS\\data\\train\\site\\"
+non_path = "E:\\PPIS\\data\\train\\non\\"
 
 base_color_dict = {'I': 20, 'G': 30, 'A': 40, 'V': 35, 'L': 45, 'P': 50, 'F': 55,
                    'Y': 100, 'T': 110, 'M': 120, 'C': 130, 'Q': 140, 'W': 150, 'N': 160, 'S': 170,
@@ -52,14 +57,12 @@ def get_text(seq, residue, index_dict)->list:
     text_list = list()
     res_id = residue.get_id()
     chain_index = res_id[1]
-    print()
     seq_index = index_dict[chain_index]
     for i in range(1, 12, 2):
         text = ""
         temp = ""
         start = int(seq_index - (i-1) / 2)
         end = int(seq_index + (i-1) / 2 + 1)
-        print(start, end)
         if start < 0:
             text += "0" * (-1*start)
             start = 0
@@ -101,7 +104,11 @@ def create_image(id, seq, chain, index_dict, site_dict):
     :param chain:
     :return:
     """
+    global non_count
+    global site_count
     count = 0
+    if non_count > max_non_site_count and site_count > max_site_count:
+        return
     site_set = set()
     dict_arr = site_dict[chain.get_id()]
     for item in dict_arr:
@@ -111,7 +118,6 @@ def create_image(id, seq, chain, index_dict, site_dict):
             continue
 
         text_list = get_text(seq, r, index_dict[chain.get_id()])
-        print(text_list)
         img = Image.new('RGB', (width, height), (0, 0, 0))
         draw = ImageDraw.Draw(img)
         i = 0
@@ -120,23 +126,41 @@ def create_image(id, seq, chain, index_dict, site_dict):
             for j in range(len(text)):
                 draw.text((10*j+5, 10*i + 5), text=text[j], fill=get_color(text[j]))
         save_path = ""
-        if count in site_set:
+        if count in site_set and site_count < max_site_count:
+            site_count = site_count + 1
             save_path = site_path + id + "_" + chain.get_id()+"_" + str(count) + ".png"
-        else:
+            img.save(save_path, "png")
+        elif count not in site_set and non_count < max_non_site_count:
+            non_count += 1
             save_path = non_path + id + "_" + chain.get_id()+"_"+ str(count) + ".png"
-        img.save(save_path, "png")
+            img.save(save_path, "png")
         count += 1
 
 
 if __name__ == '__main__':
     p = PDBParser()
-    id = "1aby"
-    file = "../data/1aby.pdb"
-    s = p.get_structure(id, file)
-    model = s[0]
-    chain = model['B']
-    dict = generate_poly_seq(s)
-    index_dict = generate_index_in_seq(s)
-    with open("../json/1aby.json", "r") as f:
-        load_dict = json.load(f)
-    create_image(id, dict['B'], chain, index_dict, load_dict)
+    id = "1lmw"
+    # file = "../data/1aby.pdb"
+    pdb_path = "E:\\PPIS\\pdb\\pdb"
+
+    json_path = "E:\\PPIS\\train_data\\json\\"
+    import os
+    file_list = os.listdir(json_path)
+    for file in file_list:
+        filename, extention = os.path.splitext(file)
+        id = filename
+        pdb_file = pdb_path+id+".ent"
+        s = p.get_structure(id, pdb_file)
+        model = s[0]
+        dict = generate_poly_seq(s)
+        index_dict = generate_index_in_seq(s)
+        with open(json_path+id+".json", "r") as f:
+            load_dict = json.load(f)
+        for chain in model:
+            print(chain.get_id(), id)
+            if chain.get_id() not in dict.keys():
+                continue
+            seq = dict[chain.get_id()]
+            create_image(id, seq, chain, index_dict, load_dict)
+            if site_count > max_site_count and non_count > max_non_site_count:
+                break
