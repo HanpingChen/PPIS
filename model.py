@@ -51,6 +51,8 @@ class Metrics(Callback):
         self.val_precisions.append(_val_precision)
         print("recall", _val_recall)
         return
+
+
 metrics = Metrics()
 
 
