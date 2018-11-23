@@ -2,8 +2,10 @@
 # date 2017/11/30 上午11:57
 # copyright ustc sse
 # 测试写tfrecord
-DATA_DIR = '../data/train/'
-TF_RECORD_DIR = '../tfrecord/'
+#DATA_DIR = '../data/train/'
+#TF_RECORD_DIR = '../tfrecord/'
+DATA_DIR = "E:\\PPIS\\data\\train\\"
+TF_RECORD_DIR = "E:\\PPIS\\tfrecord\\"
 import os
 import cv2 as cv
 import numpy as np
