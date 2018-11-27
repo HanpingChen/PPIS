@@ -5,7 +5,7 @@
 from Bio.PDB import PDBParser
 from Bio.PDB import Select
 from Bio.PDB import PDBIO
-from Bio.PDB.Polypeptide import PPBuilder
+from Bio.PDB.Polypeptide import *
 from Bio.PDB.DSSP import dssp_dict_from_pdb_file
 from Bio.PDB.DSSP import residue_max_acc
 from SiteResidue import SiteResidue
@@ -82,7 +82,7 @@ def generate_index_in_seq(structure)->dict:
         chain_dict = {}
         i = 0
         for r in chain:
-            if r.get_id()[0] == ' ':
+            if r.get_id()[0] == ' ' and is_aa(r):
                 chain_dict[r.get_id()[1]] = i
                 i = i + 1
         dict[chain.get_id()] = chain_dict

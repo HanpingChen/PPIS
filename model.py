@@ -6,6 +6,8 @@ from keras.callbacks import ModelCheckpoint, Callback
 from keras.optimizers import SGD
 from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.inception_v3 import InceptionV3
+from keras_applications.inception_resnet_v2 import InceptionResNetV2
+from keras_applications.xception import Xception
 from keras import backend as K, optimizers
 import keras
 
@@ -15,45 +17,23 @@ train_datagen = ImageDataGenerator(
     rescale=1. / 255)
 
 train_generator = train_datagen.flow_from_directory(  # 以文件夹路径为参数,自动生成经过数据提升/归一化后的数据和标签
-    '/Users/chenhanping/data/ppis/train/',  # 训练数据路径，train 文件夹下包含每一类的子文件夹
-    target_size=(150, 150),  # 图片大小resize成 150x150
+    'data/ppis/train',  # 训练数据路径，train 文件夹下包含每一类的子文件夹
+    # target_size=(150, 150),  # 图片大小resize成 150x150
     batch_size=32,
     class_mode='categorical')  # 使用二分类，返回2-D 的二值标签
 test_datagen = ImageDataGenerator(
     rescale=1. / 255)
 
 test_generator = test_datagen.flow_from_directory(  # 以文件夹路径为参数,自动生成经过数据提升/归一化后的数据和标签
-    '/Users/chenhanping/data/ppis/test/',  # 训练数据路径，train 文件夹下包含每一类的子文件夹
-    target_size=(150, 150),  # 图片大小resize成 150x150
+    'data/ppis/val',  # 训练数据路径，train 文件夹下包含每一类的子文件夹
+    # target_size=(150, 150),  # 图片大小resize成 150x150
     batch_size=32,
     class_mode='categorical')  # 使用二分类，返回2-D 的二值标签
 # print(train_generator.class_indices)
 model = InceptionV3(weights=None, classes=2)
-
+# model = InceptionResNetV2(weights=None, input_shape=(150, 150, 3), classes=2)
+# model = Xception(weights=None, classes=2)
 from sklearn.metrics import precision_score, recall_score, f1_score
-
-
-class Metrics(Callback):
-    def on_train_begin(self, logs={}):
-        self.val_f1s = []
-        self.val_recalls = []
-        self.val_precisions = []
-
-    def on_epoch_end(self, epoch, logs={}):
-        val_predict = (numpy.asarray(self.model.predict(
-            self.validation_data[0]))).round()
-        val_targ = self.validation_data[1]
-        _val_f1 = f1_score(val_targ, val_predict,average='macro')
-        _val_recall = recall_score(val_targ, val_predict,average='macro')
-        _val_precision = precision_score(val_targ, val_predict,average='macro')
-        self.val_f1s.append(_val_f1)
-        self.val_recalls.append(_val_recall)
-        self.val_precisions.append(_val_precision)
-        print("recall", _val_recall)
-        return
-
-
-metrics = Metrics()
 
 
 def precision(y_true, y_pred):
@@ -89,27 +69,29 @@ def f1(y_true, y_pred):
     return 2*(pre * r) / (pre + r)
 
 
-tbCallBack = keras.callbacks.TensorBoard(log_dir='log',
-histogram_freq=1,
-write_graph=True,
-write_images=True)
 # #
 from keras.optimizers import Adam
-# model.load_weights("model_v1.hdf5")
-sgd = optimizers.SGD(lr=0.01, decay=0.09, momentum=0.8, nesterov=True)
-model_checkpoint = ModelCheckpoint('model_v1.hdf5', monitor='loss',verbose=1, save_best_only=True)
-model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy', precision, recall, f1])
-# X, Y = load_data(10000, "tfrecord/train.tfrecord")
-# X_val, Y_val = load_data(2000, "tfrecord/test.tfrecord")
-num_non = 30699
-num_site = 5505
+
+model_checkpoint = ModelCheckpoint('model-{epoch:d}.hdf5', monitor='val_loss', verbose=1, save_best_only=True)
+from keras.losses import *
+
+model.compile(optimizer=Adam(0.0001), loss='binary_crossentropy', metrics=['accuracy', precision, recall])
+model.load_weights("model-65.hdf5")
+
 # t 在0到1之间，t越大，则约优化recall，t越小，越优化precision
 t = 0.48
+t_callback = keras.callbacks.TensorBoard(log_dir="log/",
+                                         histogram_freq=0,
+                                         write_graph=True,
+                                         write_images=True)
 model.fit_generator(train_generator,
-                    callbacks=[model_checkpoint,metrics],
-                    epochs=20,
-                    class_weight={1: (num_non / num_site)*t, 0: 1},
+                    callbacks=[model_checkpoint, t_callback],
+                    epochs=300,
+                    class_weight='auto',
                     validation_data=test_generator,
+                    # validation_steps=1000,
+                    steps_per_epoch=2000,
                     shuffle=True,
 
 )
+

@@ -9,7 +9,8 @@ from tflearn.layers.merge_ops import merge
 from tflearn.layers.estimator import regression
 from image_process.load_data import load_data
 
-X, Y = load_data(200, "tfrecord/train.tfrecord")
+X, Y = load_data(70000, "E:\\PPIS\\tfrecord\\train.tfrecord")
+X_val, Y_val = load_data(1200, "E:\\PPIS\\tfrecord\\test.tfrecord")
 
 network = input_data(shape=[None, 150, 150, 3])
 conv1_7_7 = conv_2d(network, 64, 7, strides=2, activation='relu', name='conv1_7_7_s2')
@@ -123,7 +124,7 @@ network = regression(loss, optimizer='momentum',
 # to train
 model = tflearn.DNN(network, checkpoint_path='model_googlenet',
                     max_checkpoints=1, tensorboard_verbose=2)
-
-model.fit(X, Y, n_epoch=1000, validation_set=0.1, shuffle=True,
-          show_metric=True, batch_size=64, snapshot_step=200,
+model.load('model_googlenet-48200')
+model.fit(X, Y, n_epoch=30, validation_set=(X_val, Y_val), shuffle=True,
+          show_metric=True, batch_size=64, snapshot_step=10,
           snapshot_epoch=False, run_id='googlenet_oxflowers17')

@@ -116,7 +116,8 @@ def create_image(id, seq, chain, index_dict, site_dict):
     for r in chain:
         if not is_aa(r):
             continue
-
+        if r.get_id()[1] not in index_dict[chain.get_id()]:
+            continue
         text_list = get_text(seq, r, index_dict[chain.get_id()])
         img = Image.new('RGB', (width, height), (0, 0, 0))
         draw = ImageDraw.Draw(img)
@@ -161,7 +162,7 @@ if __name__ == '__main__':
             load_dict = json.load(f)
         for chain in model:
             print(chain.get_id(), id)
-            if chain.get_id() not in dict.keys():
+            if chain.get_id() not in dict.keys() or len(dict[chain.get_id()]) < 20:
                 continue
             seq = dict[chain.get_id()]
             create_image(id, seq, chain, index_dict, load_dict)
