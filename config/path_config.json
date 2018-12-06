@@ -1,0 +1,7 @@
+{
+  "label_path":"E:\\PPIS\\data\\ppis\\seq_dataset\\label",
+  "protein_seq_path":"E:\\PPIS\\data\\ppis\\seq_dataset\\protein_seq",
+  "index_dict_path":"E:\\PPIS\\data\\ppis\\seq_dataset\\index_dict",
+  "site_path":"E:\\PPIS\\data\\ppis\\seq_dataset\\site_set",
+  "label4_path":"E:\\PPIS\\data\\ppis\\seq_dataset\\label4"
+}
