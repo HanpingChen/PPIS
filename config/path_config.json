@@ -1,0 +1,6 @@
+{
+  "label_path":"/Users/chenhanping/Downloads/seq_dataset/label",
+  "protein_seq_path":"/Users/chenhanping/Downloads/seq_dataset/protein_seq",
+  "dset72_protein_seq_path":"/Users/chenhanping/Downloads/dsset72/protein_seq",
+  "dset72_label":"/Users/chenhanping/Downloads/dset72/label"
+}
