@@ -3,6 +3,7 @@
 # copyright ustc sse
 from keras.layers import *
 from keras.models import *
+
 from text_process.text_data_generator import *
 
 
@@ -67,22 +68,20 @@ def TextCNN(max_len=21, max_features=30, embed_size=30):
 
 if __name__ == '__main__':
     import numpy as np
-    import random
-    import keras
     from keras.utils import *
-    winndow_size = 7
+    winndow_size = 9
     model = TextCNN(max_len=winndow_size)
-    x, y = flow_from_directory("/Users/chenhanping/Downloads/rnn_data/text_data")
-    #x, y = text_generate(window_size=winndow_size)
+    # x, y = flow_from_directory("/Users/chenhanping/Downloads/rnn_data/text_data")
+    x, y = text_generate(path="data/ppis/rnn_data/rnn_data", window_size=winndow_size)
     print(np.shape(x), np.shape(y))
     y = to_categorical(y)
     # print(np.count_nonzero(y))
     print(y)
     model.fit(x, y,
               shuffle=True,
-              epochs=100,
+              epochs=1000,
               validation_split=0.1,
-              class_weight='auto',
+              class_weight={1: 3, 0: 0.9},
               batch_size=32)
     score = model.evaluate(x, y, batch_size=32)
     print(score)

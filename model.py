@@ -18,7 +18,7 @@ train_datagen = ImageDataGenerator(
 
 train_generator = train_datagen.flow_from_directory(  # 以文件夹路径为参数,自动生成经过数据提升/归一化后的数据和标签
     'data/ppis/train',  # 训练数据路径，train 文件夹下包含每一类的子文件夹
-    # target_size=(150, 150),  # 图片大小resize成 150x150
+    target_size=(150, 150),  # 图片大小resize成 150x150
     batch_size=32,
     class_mode='categorical')  # 使用二分类，返回2-D 的二值标签
 test_datagen = ImageDataGenerator(
@@ -26,7 +26,7 @@ test_datagen = ImageDataGenerator(
 
 test_generator = test_datagen.flow_from_directory(  # 以文件夹路径为参数,自动生成经过数据提升/归一化后的数据和标签
     'data/ppis/val',  # 训练数据路径，train 文件夹下包含每一类的子文件夹
-    # target_size=(150, 150),  # 图片大小resize成 150x150
+    target_size=(150, 150),  # 图片大小resize成 150x150
     batch_size=32,
     class_mode='categorical')  # 使用二分类，返回2-D 的二值标签
 # print(train_generator.class_indices)
@@ -72,11 +72,12 @@ def f1(y_true, y_pred):
 # #
 from keras.optimizers import Adam
 
-model_checkpoint = ModelCheckpoint('model-{epoch:d}.hdf5', monitor='val_loss', verbose=1, save_best_only=True)
+model_checkpoint = ModelCheckpoint('model-{epoch:d}.hdf5',
+                                   monitor='val_precision', verbose=1,
+                                   save_best_only=True, mode='max')
 from keras.losses import *
-
-model.compile(optimizer=Adam(0.0001), loss='binary_crossentropy', metrics=['accuracy', precision, recall])
-model.load_weights("model-65.hdf5")
+model.compile(optimizer=Adam(0.0001), loss='categorical_crossentropy', metrics=['accuracy', precision, recall])
+model.load_weights("model-3.hdf5")
 
 # t 在0到1之间，t越大，则约优化recall，t越小，越优化precision
 t = 0.48
@@ -84,13 +85,15 @@ t_callback = keras.callbacks.TensorBoard(log_dir="log/",
                                          histogram_freq=0,
                                          write_graph=True,
                                          write_images=True)
+
+reduce_lr_callback = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5)
 model.fit_generator(train_generator,
-                    callbacks=[model_checkpoint, t_callback],
+                    callbacks=[model_checkpoint, t_callback, reduce_lr_callback],
                     epochs=300,
                     class_weight='auto',
                     validation_data=test_generator,
-                    # validation_steps=1000,
-                    steps_per_epoch=2000,
+                    validation_steps=1000,
+                    # steps_per_epoch=2000,
                     shuffle=True,
 
 )

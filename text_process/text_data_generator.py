@@ -207,7 +207,7 @@ def process(x, y):
     tokenizer.fit_on_texts(texts)
     # 对每个字符串转换为数字列表，使用每个词的编号进行编号
     x_train_seq = tokenizer.texts_to_sequences(texts)
-    x_train = sequence.pad_sequences(x_train_seq, maxlen=7)
+    x_train = sequence.pad_sequences(x_train_seq, maxlen=9)
     y_train = np.array(y)
     return x_train, y_train
 
