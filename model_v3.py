@@ -88,4 +88,4 @@ print(model.output_shape)
 # train
 x_train, y_train, x_val, y_val = load_data("config/path_config.json", load_val=True)
 
-model.fit(x_train, y_train, validation_split=0.1, batch_size=32, epochs=10, verbose=1,callbacks=[eval_callback])
+model.fit(x_train, y_train, validation_split=0.1, batch_size=32, epochs=50, verbose=1,callbacks=[eval_callback])
