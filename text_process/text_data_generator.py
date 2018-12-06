@@ -8,6 +8,7 @@ from keras.preprocessing import sequence
 from keras.preprocessing.text import *
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
+import numpy as np
 
 
 def get_tf_idf():
