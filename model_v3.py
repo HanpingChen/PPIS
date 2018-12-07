@@ -43,11 +43,11 @@ eval_callback = EvalCallback()
 # maxlen  char_value_dict_len  class_label_count
 def Bilstm_CNN_Crf(maxlen, char_value_dict_len, class_label_count):
     word_input = Input(shape=(maxlen,), dtype='int32', name='word_input')
-    word_emb = Embedding(char_value_dict_len + 1, output_dim=64,
+    word_emb = Embedding(char_value_dict_len + 1, output_dim=200,
                          input_length=maxlen, name='word_emb')(word_input)
 
     # bilstm
-    bilstm = Bidirectional(LSTM(32, return_sequences=True))(word_emb)
+    bilstm = Bidirectional(LSTM(200, return_sequences=True))(word_emb)
     bilstm_d = Dropout(0.1)(bilstm)
 
     # cnn
@@ -56,7 +56,7 @@ def Bilstm_CNN_Crf(maxlen, char_value_dict_len, class_label_count):
     conv = Conv1D(nb_filter=50, filter_length=2 * half_window_size + 1,
                   padding='valid')(padding_layer)
     conv_d = Dropout(0.1)(conv)
-    dense_conv = TimeDistributed(Dense(50))(conv_d)
+    dense_conv = TimeDistributed(Dense(300))(conv_d)
 
     # merge
     rnn_cnn_merge = Concatenate(axis=2)([bilstm_d, dense_conv])
