@@ -8,9 +8,10 @@ from keras.preprocessing import sequence
 import numpy as np
 
 
-def load_data(config_file_path="../config/path_config.json", load_val=False):
+def load_data(config_file_path="../config/path_config.json", load_val=False, get_token=False):
     """
     加载数据
+    :param get_token:
     :param load_val:
     :param config_file_path:
     :return:
@@ -31,12 +32,10 @@ def load_data(config_file_path="../config/path_config.json", load_val=False):
     print(tokenizer.word_counts)
     print(tokenizer.word_index)
     x_seq = tokenizer.texts_to_sequences(texts)
-    print(x_seq)
     x_seq = sequence.pad_sequences(x_seq, maxlen=max_len, padding='post')
     y = sequence.pad_sequences(y, maxlen=max_len, padding='post')
     y = np.expand_dims(y, axis=2)
     print(np.shape(x_seq), np.shape(y))
-    print(x_seq)
     if load_val:
         val_label_path = paths['dset72_label_path']
         val_seq_path = paths['dset72_protein_seq_path']
@@ -48,13 +47,15 @@ def load_data(config_file_path="../config/path_config.json", load_val=False):
                 text += c + " "
             val_texts.append(text)
         val_x_seq = tokenizer.texts_to_sequences(val_texts)
-        print(val_x_seq)
         val_x_seq = sequence.pad_sequences(val_x_seq, maxlen=max_len,padding='post')
         val_y = sequence.pad_sequences(val_y, maxlen=max_len,padding='post')
         val_y = np.expand_dims(val_y, axis=2)
         print(np.shape(val_x_seq), np.shape(val_y))
-        print(val_x_seq)
+        if get_token:
+            return x_seq, y, val_x_seq, val_y, tokenizer
         return x_seq, y, val_x_seq, val_y
+    if get_token:
+        return x_seq, y, tokenizer
     return x_seq, y
 
 
