@@ -77,7 +77,7 @@ def Bilstm_CNN_Crf(maxlen, char_value_dict_len, class_label_count):
     # build model
     model = Model(input=word_input, output=output1)
     from keras.losses import binary_crossentropy,categorical_crossentropy
-    model.compile(loss=['categorical_crossentropy'], optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 
     # model.summary()
@@ -92,15 +92,15 @@ model.summary()
 print(model.input_shape)
 print(model.output_shape)
 
-plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
+#plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
 
 # train
 x_train, y_train, x_val, y_val = load_data("config/path_config.json", load_val=True)
 
 y_train = keras.utils.to_categorical(y_train)
 y_val = keras.utils.to_categorical(y_val)
-model.load_weights('model-v4.hdf5')
+#model.load_weights('model-v4.hdf5')
 model.fit(x_train, y_train, validation_data=(x_val, y_val),
-          batch_size=32, epochs=20, verbose=1,
+          batch_size=32, epochs=120, verbose=1, shuffle=True,
           callbacks=[eval_callback])
 model.save("model-v4.hdf5")
