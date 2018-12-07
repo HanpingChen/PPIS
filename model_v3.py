@@ -56,7 +56,7 @@ def Bilstm_CNN_Crf(maxlen, char_value_dict_len, class_label_count):
     conv = Conv1D(nb_filter=50, filter_length=2 * half_window_size + 1,
                   padding='valid')(padding_layer)
     conv_d = Dropout(0.1)(conv)
-    dense_conv = TimeDistributed(Dense(200))(conv_d)
+    dense_conv = TimeDistributed(Dense(300))(conv_d)
 
     # merge
     rnn_cnn_merge = Concatenate(axis=2)([bilstm_d, dense_conv])
@@ -87,8 +87,5 @@ print(model.output_shape)
 
 # train
 x_train, y_train, x_val, y_val = load_data("config/path_config.json", load_val=True)
-model.load_weights("model-v3.hdf5")
 
-model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=32, epochs=50, verbose=1, callbacks=[eval_callback])
-model.save("model2-v3.hdf5")
-
+model.fit(x_train, y_train, validation_split=0.1, batch_size=32, epochs=50, verbose=1,callbacks=[eval_callback])
