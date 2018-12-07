@@ -10,23 +10,24 @@ from Bio.PDB import PDBParser
 from Bio.PDB import PDBList
 
 
-site_path = "/Users/chenhanping/data/ppis/train/site/"
-non_path = "/Users/chenhanping/data/ppis/train/non/"
-val_site_path = "/Users/chenhanping/data/ppis/val/site/"
-val_non_path = "/Users/chenhanping/data/ppis/val/non/"
+site_path = "../data/ppis/train/site/"
+non_path = "../data/ppis/train/non/"
+val_site_path = "../data/ppis/val/site/"
+val_non_path = "../data/ppis/val/non/"
 width = 139
 height = 139
-base_color_dict = {'I': 20, 'G': 30, 'A': 40, 'V': 35, 'L': 45, 'P': 50, 'F': 55,
-                   'Y': 100, 'T': 110, 'M': 120, 'C': 130, 'Q': 140, 'W': 150, 'N': 160, 'S': 170,
-                   'H': 210, 'K': 200, 'R': 255,
-                   'E': 150, 'D': 180}
 
-# 极性数值
+# 等电点
+base_color_dict = {'I': 6.05, 'G': 6.06, 'A': 6.11, 'V': 6.0, 'L': 6.01, 'P': 6.3, 'F': 5.49,
+                   'Y': 5.64, 'T': 5.6, 'M': 5.74, 'C': 5.05, 'Q': 5.65, 'W': 5.89, 'N': 5.41, 'S': 5.68,
+                   'H': 7.6, 'K': 9.6, 'R': 10.76,
+                   'E': 3.15, 'D': 2.85}
+# 疏水性数值
 green_color_dict = {
-                    'I': 5.2, 'G': 9, 'A': 8.1, 'V': 5.9, 'L': 4.9, 'P': 8, 'F': 5.2,
-                    'Y': 6.2, 'T': 8, 'M': 5.7, 'C': 5.5, 'Q': 10.5, 'W': 5.4, 'N': 11.6, 'S': 9.2,
+                    'I': 4.5, 'G': -0.4, 'A': 1.8, 'V': 4.2, 'L': 3.8, 'P': -1.6, 'F': 2.8,
+                    'Y': -1.3, 'T': -0.7, 'M': 1.9, 'C': 2.5, 'Q': -3.5, 'W': -0.9, 'N': -3.5, 'S': -0.8,
                     'H': 10.4, 'K': 11.3, 'R': 10.5,
-                    'E': 12.3,  'D': 13
+                    'E': -3.5,  'D': -3.5
 }
 
 # 使用溶解可达表面积数值
@@ -102,13 +103,14 @@ def get_relative_aa(seq, residue, index_dict)->list:
 
 
 def get_base_color(aa, seq_count_dict):
-
-    return base_color_dict.get(aa, 0)
+    max_val = base_color_dict[max(base_color_dict, key=base_color_dict.get)]
+    return int(255 * (base_color_dict.get(aa, 0) / max_val))
 
 
 def get_green_color(aa):
     max_val = green_color_dict[max(green_color_dict, key=green_color_dict.get)]
-    return int(255 * (green_color_dict.get(aa, 0) / max_val))
+    min_val = green_color_dict[min(green_color_dict, key=green_color_dict.get)]
+    return int(255*(green_color_dict.get(aa, -1) - min_val) / (max_val - min_val))
 
 
 def get_blue_color(aa):
@@ -177,10 +179,10 @@ def generate_image(isVal, seq, id, chain, site_set, index_dict, seq_count_dict):
 if __name__ == '__main__':
     import os
     import random
-    pdb_path = "/Users/chenhanping/Downloads/pdb/pdb"
+    pdb_path = "../pdb/pdb"
     p = PDBParser()
     pdb = PDBList()
-    data_set_path = "/Users/chenhanping/Downloads/PETs-master/dataset/NACCESS/Dset186/"
+    data_set_path = "../data/Dset186/"
     file_list = os.listdir(data_set_path)
     i = random.randint(0, len(file_list))
     val_protein = file_list[i]

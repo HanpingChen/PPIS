@@ -8,9 +8,10 @@ from keras.preprocessing import sequence
 import numpy as np
 
 
-def load_data(config_file_path="../config/path_config.json"):
+def load_data(config_file_path="../config/path_config.json", load_val=False):
     """
     加载数据
+    :param load_val:
     :param config_file_path:
     :return:
     """
@@ -19,25 +20,7 @@ def load_data(config_file_path="../config/path_config.json"):
         paths = json.load(f)
     label_path = paths['label_path']
     protein_seq_path = paths['protein_seq_path']
-    protein_file_list = os.listdir(protein_seq_path)
-    x = []
-    y = []
-    max_len = 0
-    for file in protein_file_list:
-        file_path = os.path.join(protein_seq_path, file)
-        filename, _ = os.path.splitext(file)
-        f = open(file_path, 'r')
-        seq = f.readline()
-        if len(seq) > 300:
-            continue
-        label_file_path = os.path.join(label_path, filename+".txt")
-        f = open(label_file_path, 'r')
-        label = [int(x) + 1 for x in f.readline()]
-
-        if len(seq) > max_len:
-            max_len = len(seq)
-        x.append(seq)
-        y.append(label)
+    x, y, max_len = read_data(protein_seq_path, label_path)
     texts = list()
     for s in x:
         text = ""
@@ -49,12 +32,53 @@ def load_data(config_file_path="../config/path_config.json"):
     print(tokenizer.word_index)
     x_seq = tokenizer.texts_to_sequences(texts)
     print(x_seq)
-    x_seq = sequence.pad_sequences(x_seq, maxlen=max_len)
-    y = sequence.pad_sequences(y, maxlen=max_len)
+    x_seq = sequence.pad_sequences(x_seq, maxlen=max_len, padding='post')
+    y = sequence.pad_sequences(y, maxlen=max_len, padding='post')
     y = np.expand_dims(y, axis=2)
     print(np.shape(x_seq), np.shape(y))
     print(x_seq)
+    if load_val:
+        val_label_path = paths['dset72_label_path']
+        val_seq_path = paths['dset72_protein_seq_path']
+        val_x, val_y, _ = read_data(val_seq_path, val_label_path)
+        val_texts = list()
+        for s in val_x:
+            text = ""
+            for c in s:
+                text += c + " "
+            val_texts.append(text)
+        val_x_seq = tokenizer.texts_to_sequences(val_texts)
+        print(val_x_seq)
+        val_x_seq = sequence.pad_sequences(val_x_seq, maxlen=max_len,padding='post')
+        val_y = sequence.pad_sequences(val_y, maxlen=max_len,padding='post')
+        val_y = np.expand_dims(val_y, axis=2)
+        print(np.shape(val_x_seq), np.shape(val_y))
+        print(val_x_seq)
+        return x_seq, y, val_x_seq, val_y
     return x_seq, y
+
+
+def read_data(seq_path, label_path):
+    max_len = 0
+    protein_file_list = os.listdir(seq_path)
+    x = []
+    y = []
+    for file in protein_file_list:
+        file_path = os.path.join(seq_path, file)
+        filename, _ = os.path.splitext(file)
+        f = open(file_path, 'r')
+        seq = f.readline()
+        if len(seq) > 300:
+            continue
+        label_file_path = os.path.join(label_path, filename+".txt")
+        f = open(label_file_path, 'r')
+        label = [int(x)+1 for x in f.readline()]
+
+        if len(seq) > max_len:
+            max_len = len(seq)
+        x.append(seq)
+        y.append(label)
+    return x, y, max_len
 
 
 def create_label(config_file_path="../config/path_config.json"):
@@ -71,6 +95,7 @@ def create_label(config_file_path="../config/path_config.json"):
         filename, _ = os.path.splitext(file)
         index_dict_file = os.path.join(index_dict_path, filename+".json")
         site_set_file = os.path.join(site_set_path, filename + ".txt")
+        print(filename)
         with open(site_set_file, 'r') as f:
             site_arr = [int(x) for x in f.readline().split(',')]
         site_set = set(site_arr)
@@ -86,44 +111,30 @@ def create_label(config_file_path="../config/path_config.json"):
         # 保存
         f = open(label_file_path, 'w')
         f.write(label)
-        break
 
 
-def process_label(config_file_path="../config/path_config.json"):
+def filter_protein_seq(config_file_path="../config/path_config.json"):
     with open(config_file_path, 'r') as f:
         paths = json.load(f)
-    label_path = paths['label_path']
-    label4_path = paths['label4_path']
-    files = os.listdir(label_path)
+    seq_path = paths['protein_seq_path']
+    site_path = paths['site_path']
+    val_seq_path = paths['val_protein_seq_path']
+    seq_file_list = os.listdir(seq_path)
+    count = 0
+    for file in seq_file_list:
+        # if not os.path.exists(os.path.join(site_path, file)):
+        #     print(os.path.join(seq_path, file))
+        #     os.remove(os.path.join(seq_path, file))
+        #     count += 1
+        if os.path.exists(os.path.join(val_seq_path, file)):
+            count += 1
+            print(os.path.join(val_seq_path, file))
+            os.remove(os.path.join(seq_path, file))
+    print(count)
 
-    for file in files:
-        label_file_path = os.path.join(label_path, file)
-        f = open(label_file_path, 'r')
-        y = [int(x) for x in f.readline()]
 
-        label = [0] * len(y)
-        print(len(label))
-        if y[0] == 1:
-            label[0] = 2
-        for i in range(1, len(y)):
-            if y[i] == 1:
-                if y[i-1] == 0:
-                    # 是开始位点
-                    label[i] = 2
-                else:
-                    # 非起始位点
-                    label[i] = 3
-            if y[i] == 0:
-                if y[i-1] == 0:
-                    # 非起始
-                    label[i] = 1
-
-        label4_file_path = os.path.join(label4_path, file)
-        f = open(label4_file_path, 'w')
-        label4_str = ''.join(str(x) for x in label)
-        f.write(label4_str)
-        print(file, label, len(label))
 
 
 if __name__ == '__main__':
-    process_label()
+    create_label()
+    # filter_protein_seq()
