@@ -48,6 +48,10 @@ class EvalCallback(Callback):
 
 
 eval_callback = EvalCallback()
+# 学习率自动调节
+lr_callback = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5,patience=10)
+# 模型保存回调函数
+check_point = keras.callbacks.ModelCheckpoint("model-v6.hdf5", save_best_only=True, period=5)
 # input:
 # maxlen  char_value_dict_len  class_label_count
 
@@ -122,9 +126,22 @@ for item in y_train:
     temp = []
     for i in range(len(item)):
         if item[i][0] == 2:
-            temp.append(5)
+            temp.append(4)
         else:
             temp.extend(item[i])
     y_train_pro.extend(temp)
 y_train_pro = np.reshape(y_train_pro, [len(y_train), len(y_train[0]), 1])
-model.fit(x_train, [y_train, y_train_pro], validation_split=0.1, batch_size=32, epochs=50, verbose=1,callbacks=[eval_callback])
+y_val_pro = []
+for item in y_val:
+    temp = []
+    for i in range(len(item)):
+        if item[i][0] == 2:
+            temp.append(4)
+        else:
+            temp.extend(item[i])
+    y_val_pro.extend(temp)
+y_val_pro = np.reshape(y_val_pro, [len(y_val), len(y_val[0]), 1])
+model.fit(x_train, [y_train, y_train_pro], validation_data=(x_val, [y_val, y_val_pro]),
+          batch_size=32, epochs=200, verbose=1,
+          callbacks=[eval_callback, lr_callback,check_point])
+model.save('model-v6.hdf5')
