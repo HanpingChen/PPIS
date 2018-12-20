@@ -40,7 +40,7 @@ class EvalCallback(Callback):
                 site_pro.append(val[2])
         sorted_site_pro = sorted(site_pro, reverse=True)
         #阈值
-        d_val = min(sorted_site_pro[int(len(sorted_site_pro)*0.12)], 0.2)
+        d_val = min(sorted_site_pro[int(len(sorted_site_pro)*0.12)], 0.1)
         for val in site_pro:
             if val >= d_val:
                 pred.append(1)
@@ -69,7 +69,7 @@ def Bilstm_CNN_Crf(maxlen, char_value_dict_len, class_label_count, weight_metric
                          input_length=maxlen, name='word_emb2')(word_input)
 
     # 两个emb融合
-    word_emb = Concatenate(axis=2,name='word_emb')([word_emb1, word_emb2])
+    word_emb = Concatenate(axis=2, name='word_emb')([word_emb1, word_emb2])
     # bilstm
     bilstm = Bidirectional(LSTM(200, return_sequences=True))(word_emb)
     bilstm_d = Dropout(0.1)(bilstm)
@@ -109,14 +109,14 @@ model.summary()
 print(model.input_shape)
 print(model.output_shape)
 
-plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
+#plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
 
 # train
 weight = get_weight_metric(tokenizer, 'text_process/veb.txt')
 y_train = keras.utils.to_categorical(y_train)
 y_val = keras.utils.to_categorical(y_val)
-
+model.load_weights('model-v5.hdf5')
 model.fit(x_train, y_train, validation_data=(x_val, y_val),
-          batch_size=32, epochs=20, verbose=1,
+          batch_size=32, epochs=200, verbose=1,
           callbacks=[eval_callback])
-#model.save("model-v4.hdf5")
+model.save("model-v5.hdf5")

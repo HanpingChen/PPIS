@@ -1,6 +1,9 @@
 {
-  "label_path":"/Users/chenhanping/Downloads/seq_dataset/label",
-  "protein_seq_path":"/Users/chenhanping/Downloads/seq_dataset/protein_seq",
-  "dset72_protein_seq_path":"/Users/chenhanping/Downloads/dset72/protein_seq",
-  "dset72_label_path":"/Users/chenhanping/Downloads/dset72/label"
+  "label_path":"E:\\PPIS\\data\\ppis\\seq_dataset\\label",
+  "protein_seq_path":"E:\\PPIS\\data\\ppis\\seq_dataset\\protein_seq",
+  "index_dict_path":"E:\\PPIS\\data\\ppis\\seq_dataset\\index_dict",
+  "site_path":"E:\\PPIS\\data\\ppis\\seq_dataset\\site_set",
+  "label4_path":"E:\\PPIS\\data\\ppis\\seq_dataset\\label4",
+  "dset72_protein_seq_path":"E:\\PPIS\\data\\ppis\\dset72\\protein_seq",
+  "dset72_label_path":"E:\\PPIS\\data\\ppis\\dset72\\label"
 }

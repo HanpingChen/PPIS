@@ -15,18 +15,18 @@ max_site_count = 10000
 # 设置非位点数量
 max_non_site_count = 10000
 
-width = 150
-height = 150
+width = 130
+height = 80
 
 global site_count
 site_count = 0
 global non_count
 non_count = 0
 
-#site_path = "../data/train/site/"
-#non_path = "../data/train/non/"
-site_path = "E:\\PPIS\\data\\train\\site\\"
-non_path = "E:\\PPIS\\data\\train\\non\\"
+# site_path = "../../image_data/full_train/site/"
+# non_path = "../../image_data/full_train/non/"
+site_path = "E:\\image_data\\full_train_data\\site\\"
+non_path = "E:\\image_data\\full_train_data\\non\\"
 
 base_color_dict = {'I': 20, 'G': 30, 'A': 40, 'V': 35, 'L': 45, 'P': 50, 'F': 55,
                    'Y': 100, 'T': 110, 'M': 120, 'C': 130, 'Q': 140, 'W': 150, 'N': 160, 'S': 170,
@@ -116,23 +116,25 @@ def create_image(id, seq, chain, index_dict, site_dict):
     for r in chain:
         if not is_aa(r):
             continue
-
+        if r.get_id()[1] not in index_dict[chain.get_id()]:
+            continue
         text_list = get_text(seq, r, index_dict[chain.get_id()])
         img = Image.new('RGB', (width, height), (0, 0, 0))
         draw = ImageDraw.Draw(img)
         i = 0
         for text in text_list:
             i = i + 1
+            start = (width - len(text)*10) / 2
             for j in range(len(text)):
-                draw.text((10*j+5, 10*i + 5), text=text[j], fill=get_color(text[j]))
+                draw.text((10*j+start, 10*i + 5), text=text[j], fill=get_color(text[j]))
         save_path = ""
-        if count in site_set and site_count < max_site_count:
-            site_count = site_count + 1
-            save_path = site_path + id + "_" + chain.get_id()+"_" + str(count) + ".png"
+        if r.get_id()[1] in site_set:
+            save_path = site_path + id + "_" + chain.get_id()+"_" + str(r.get_id()[1]) + ".png"
+            img = img.resize((150, 150))
             img.save(save_path, "png")
-        elif count not in site_set and non_count < max_non_site_count:
-            non_count += 1
-            save_path = non_path + id + "_" + chain.get_id()+"_"+ str(count) + ".png"
+        elif r.get_id()[0] == " " and is_aa(r):
+            save_path = non_path + id + "_" + chain.get_id()+"_"+ str(r.get_id()[1]) + ".png"
+            img = img.resize((150, 150))
             img.save(save_path, "png")
         count += 1
 
@@ -143,10 +145,12 @@ if __name__ == '__main__':
     # file = "../data/1aby.pdb"
     pdb_path = "E:\\PPIS\\pdb\\pdb"
 
-    json_path = "E:\\PPIS\\train_data\\json\\"
+    json_path = "E:\\PPIS\\json\\"
     import os
     file_list = os.listdir(json_path)
+    count = 0
     for file in file_list:
+        count += 1
         filename, extention = os.path.splitext(file)
         id = filename
         pdb_file = pdb_path+id+".ent"
@@ -158,9 +162,8 @@ if __name__ == '__main__':
             load_dict = json.load(f)
         for chain in model:
             print(chain.get_id(), id)
-            if chain.get_id() not in dict.keys():
+            if chain.get_id() not in dict.keys() or len(dict[chain.get_id()]) < 20:
                 continue
             seq = dict[chain.get_id()]
             create_image(id, seq, chain, index_dict, load_dict)
-            if site_count > max_site_count and non_count > max_non_site_count:
-                break
+        print(count)

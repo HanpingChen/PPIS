@@ -32,8 +32,8 @@ def load_data(batch_size, record_file_path):
     label = tf.cast(features['label'], tf.int64)
 
     images, labels = tf.train.shuffle_batch([image, label],
-                                                        capacity=MIN_AFTER_QUEUE + 3 * batch_size,min_after_dequeue=MIN_AFTER_QUEUE,
-                                                        batch_size=batch_size, num_threads=1)
+                                                        capacity=10000,min_after_dequeue=MIN_AFTER_QUEUE,
+                                                        batch_size=batch_size, num_threads=2)
 
     labels = tf.one_hot(labels, 2, 1, 0)
     labels = tf.cast(labels, dtype=tf.int32)
@@ -42,7 +42,7 @@ def load_data(batch_size, record_file_path):
     sess = tf.Session()
     sess.run(init)
     coord = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(coord=coord,sess=sess)
+    threads = tf.train.start_queue_runners(coord=coord, sess=sess)
     images, labels = sess.run([images, labels])
     coord.request_stop()
     coord.join(threads)
