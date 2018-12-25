@@ -8,7 +8,7 @@ from keras.preprocessing import sequence
 import numpy as np
 
 
-def load_data(config_file_path="../config/path_config.json", load_val=False, get_token=False):
+def load_data(config_file_path="../config/path_config.json", load_val=False, get_token=False, one_hot=True):
     """
     加载数据
     :param get_token:
@@ -34,7 +34,8 @@ def load_data(config_file_path="../config/path_config.json", load_val=False, get
     x_seq = tokenizer.texts_to_sequences(texts)
     x_seq = sequence.pad_sequences(x_seq, maxlen=max_len, padding='post')
     y = sequence.pad_sequences(y, maxlen=max_len, padding='post')
-    y = np.expand_dims(y, axis=2)
+    if one_hot:
+        y = np.expand_dims(y, axis=2)
     print(np.shape(x_seq), np.shape(y))
     if load_val:
         val_label_path = paths['dset72_label_path']
@@ -49,7 +50,8 @@ def load_data(config_file_path="../config/path_config.json", load_val=False, get
         val_x_seq = tokenizer.texts_to_sequences(val_texts)
         val_x_seq = sequence.pad_sequences(val_x_seq, maxlen=max_len,padding='post')
         val_y = sequence.pad_sequences(val_y, maxlen=max_len,padding='post')
-        val_y = np.expand_dims(val_y, axis=2)
+        if one_hot:
+            val_y = np.expand_dims(val_y, axis=2)
         print(np.shape(val_x_seq), np.shape(val_y))
         if get_token:
             return x_seq, y, val_x_seq, val_y, tokenizer
@@ -73,7 +75,7 @@ def read_data(seq_path, label_path):
             continue
         label_file_path = os.path.join(label_path, filename+".txt")
         f = open(label_file_path, 'r')
-        label = [int(x)+1 for x in f.readline()]
+        label = [int(x) for x in f.readline()]
 
         if len(seq) > max_len:
             max_len = len(seq)
@@ -85,10 +87,13 @@ def read_data(seq_path, label_path):
 def create_label(config_file_path="../config/path_config.json"):
     with open(config_file_path, 'r') as f:
         paths = json.load(f)
-    label_path = paths['label_path']
-    protein_seq_path = paths['protein_seq_path']
-    index_dict_path = paths['index_dict_path']
-    site_set_path = paths['site_path']
+    data_directory = paths['data_directory']
+    label_path = os.path.join(data_directory, "label")
+    protein_seq_path = os.path.join(data_directory, "protein_seq")
+    index_dict_path = os.path.join(data_directory, "index_dict")
+    if not os.path.exists(label_path):
+        os.makedirs(label_path)
+    site_set_path = os.path.join(data_directory, "site_set")
     protein_file_list = os.listdir(protein_seq_path)
 
     for file in protein_file_list:
@@ -98,7 +103,11 @@ def create_label(config_file_path="../config/path_config.json"):
         site_set_file = os.path.join(site_set_path, filename + ".txt")
         print(filename)
         with open(site_set_file, 'r') as f:
-            site_arr = [int(x) for x in f.readline().split(',')]
+            line = f.readline()
+            if len(line) > 0:
+                site_arr = [int(x) for x in line.split(',')]
+            else:
+                site_arr = []
         site_set = set(site_arr)
         with open(index_dict_file, 'r') as f:
             index_dict = json.load(f)
@@ -117,7 +126,8 @@ def create_label(config_file_path="../config/path_config.json"):
 def filter_protein_seq(config_file_path="../config/path_config.json"):
     with open(config_file_path, 'r') as f:
         paths = json.load(f)
-    seq_path = paths['protein_seq_path']
+    data_directory = paths['data_directory']
+    seq_path = os.path.join(data_directory, "protein_seq")
     site_path = paths['site_path']
     val_seq_path = paths['val_protein_seq_path']
     seq_file_list = os.listdir(seq_path)
