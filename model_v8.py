@@ -79,7 +79,7 @@ from util.call_back import *
 
 def read_data(path, max_len):
     lines = [x.rstrip("\n") for x in open(path).readlines()]
-    print(lines)
+    print(len(lines))
     p1 = []
     p2 = []
     label = []
@@ -122,8 +122,9 @@ def read_data(path, max_len):
 if __name__ == '__main__':
 
     p1, p2, label = read_data("/Users/chenhanping/Downloads/dataset/train14000.txt", 600)
-
-    maxlen, char_value_dict_len, class_label_count = 600, 20, 2
+    print(len(p1))
+    print(p1[0], p2[0], label[0])
+    maxlen, char_value_dict_len, class_label_count = 600, 20, 4
     model = multi_input_model(maxlen, char_value_dict_len, class_label_count)
     model.summary()
     plot_model(model, to_file='model_v8.png', show_shapes=True, show_layer_names=True)
