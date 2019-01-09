@@ -74,8 +74,61 @@ def multi_input_model(maxlen, char_value_dict_len, class_label_count):
     return model
 
 
+from util.call_back import *
+
+
+def read_data(path, max_len):
+    lines = [x.rstrip("\n") for x in open(path).readlines()]
+    print(lines)
+    p1 = []
+    p2 = []
+    label = []
+    for i in range(0, len(lines), 4):
+        p1_seq = lines[i]
+        p1_label = [str(int(x)+1) for x in lines[i+1]]
+        p2_seq = lines[i+2]
+        p2_label = [str(int(x)+1) for x in lines[i+3]]
+        p1.append(p1_seq)
+        p2.append(p2_seq)
+        label.append(p1_label)
+        p1.append(p2_seq)
+        p2.append(p1_seq)
+        label.append(p2_label)
+    texts = list()
+    for s in p1:
+        text = ""
+        for c in s:
+            text += c + " "
+        texts.append(text)
+    tokenizer = Tokenizer(num_words=20)
+    tokenizer.fit_on_texts(texts)
+    print(tokenizer.word_counts)
+    print(tokenizer.word_index)
+    x1_seq = tokenizer.texts_to_sequences(texts)
+    x1_seq = sequence.pad_sequences(x1_seq, maxlen=max_len, padding='post')
+    texts = list()
+    for s in p2:
+        text = ""
+        for c in s:
+            text += c + " "
+        texts.append(text)
+    x2_seq = tokenizer.texts_to_sequences(texts)
+    x2_seq = sequence.pad_sequences(x2_seq, maxlen=max_len, padding='post')
+    y = sequence.pad_sequences(label, maxlen=max_len, padding='post')
+    y = np.expand_dims(y, axis=2)
+    return x1_seq, x2_seq, y
+
+
 if __name__ == '__main__':
+
+    p1, p2, label = read_data("/Users/chenhanping/Downloads/dataset/train14000.txt", 600)
+
     maxlen, char_value_dict_len, class_label_count = 600, 20, 2
     model = multi_input_model(maxlen, char_value_dict_len, class_label_count)
     model.summary()
     plot_model(model, to_file='model_v8.png', show_shapes=True, show_layer_names=True)
+    lr_callback = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5)
+    # 模型保存回调函数
+    check_point = keras.callbacks.ModelCheckpoint("model-v8.hdf5", save_best_only=True)
+    eval = EvalCallback()
+    model.fit([p1, p2], label, validation_split=0.05, callbacks=[eval])
